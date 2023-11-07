@@ -23,6 +23,85 @@ function query($query)
   return $rows;
 }
 
+
+// function upload
+
+function upload()
+{
+  $nama_file = $_FILES['gambar']['name'];
+  $tipe_file = $_FILES['gambar']['type'];
+  $ukuran_file = $_FILES['gambar']['size'];
+  $error = $_FILES['gambar']['error'];
+  $tmp_file = $_FILES['gambar']['tmp_name'];
+
+
+  // ketika tidak ada gambar yang di pilih
+  if ($error == 4) {
+    echo "
+      <script>
+        alert('pilih gambar terlebih dahulu');
+      </script>
+    ";
+
+    return false;
+  }
+
+  // cek ekstensi file apakah gambar atau tidak
+  $daftar_gambar = ['jpg', 'jpeg', 'png'];
+  $ekstensi_file = explode('.', $nama_file);
+  $ekstensi_file = strtolower(end($ekstensi_file));
+  if (!in_array($ekstensi_file, $daftar_gambar)) {
+    echo "
+    <script>
+      alert('yang anda pilih bukan gambar');
+    </script>
+  ";
+
+    return false;
+  }
+
+  // cek tipe file
+  if ($tipe_file != 'image/jpeg' && $tipe_file != 'image/png') {
+    echo "
+    <script>
+      alert('yang anda pilih bukan gambar');
+    </script>
+  ";
+
+    return false;
+  }
+
+  // cek ukuran file
+  // maksimal 5mb = 5000000 
+  if ($ukuran_file > 5000000) {
+    echo "
+    <script>
+      alert('ukuran file terlalu besar dari 5mb');
+    </script>
+  ";
+
+    return false;
+  }
+
+  // lolos pengecekan 
+  // siap upload file
+  // generate nama file baru dan unik
+  $nama_file_baru = uniqid();
+  $nama_file_baru .= '.';
+  $nama_file_baru .= $ekstensi_file;
+
+  move_uploaded_file($tmp_file, 'img/' . $nama_file_baru);
+
+  return $nama_file_baru;
+}
+
+
+
+
+
+
+
+
 // Tambah Mahasiswa
 
 function tambah($data)
@@ -33,7 +112,13 @@ function tambah($data)
   $nrp = $data['nrp'];
   $email = $data['email'];
   $jurusan = $data['jurusan'];
-  $gambar = $data['gambar'];
+  // $gambar = $data['gambar'];
+
+  // upload gambar
+  $gambar = upload();
+  if (!$gambar) {
+    return false;
+  }
 
   $query = "INSERT INTO
               mahasiswa
@@ -51,6 +136,12 @@ function hapus($id)
 {
   $conn = koneksi();
 
+  // menghapus gambar di folder img
+  $mhs = query("SELECT * FROM mahasiswa WHERE id = $id");
+  if ($mhs['gambar'] != 'nophoto.jpg') {
+    unlink('img/' . $mhs['gambar']);
+  }
+
   mysqli_query($conn, "DELETE FROM mahasiswa WHERE id=$id") or die(mysqli_error($conn));
   return mysqli_affected_rows($conn);
 }
@@ -65,7 +156,17 @@ function ubah($data)
   $nrp = $data['nrp'];
   $email = $data['email'];
   $jurusan = $data['jurusan'];
-  $gambar = $data['gambar'];
+  $gambar_lama = $data['gambar_lama'];
+
+  $gambar = upload();
+  if (!$gambar) {
+    return false;
+  }
+
+  // ketika user tidak upload gambar
+  if ($gambar == 'nophoto.jpg') {
+    $gambar = $gambar_lama;
+  }
 
   $query = "UPDATE mahasiswa SET
               nama = '$nama',

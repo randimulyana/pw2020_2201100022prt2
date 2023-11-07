@@ -64,7 +64,7 @@ if (isset($_POST['cari'])) {
 
         <tr>
           <td><?= $i++; ?></td>
-          <td><img src="img/<?= $mhs['gambar']; ?>"></td>
+          <td><img src="img/<?= $mhs['gambar']; ?>" width="100"></td>
           <td><?= $mhs['nama']; ?></td>
           <td>
             <a href="detail.php?id=<?= $mhs['id']; ?>">lihat detail</a>
